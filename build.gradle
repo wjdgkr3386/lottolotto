@@ -31,7 +31,6 @@ dependencies {
   
   // db connect
   runtimeOnly 'com.mysql:mysql-connector-j'
-  implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
 }
 
 tasks.named('test') {

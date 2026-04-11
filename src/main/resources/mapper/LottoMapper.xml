@@ -2,7 +2,21 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.demo.lotto.LottoDAO">
+<mapper namespace="com.example.demo.dao.LottoDAO">
 
-
+	<select id="getMaxNumber" resultType="int">
+		select max(drw_no) from lotto
+	</select>
+	
+    <insert id="lottoInsert" parameterType="com.example.demo.model.Lotto">
+        INSERT INTO lotto (
+            drw_no, drwt_no1, drwt_no2, drwt_no3, drwt_no4, drwt_no5, drwt_no6,
+            bnus_no, win_1_money, win_1_count, win_2_money, win_2_count
+        ) VALUES (
+            #{drwNo}, #{drwtNo1}, #{drwtNo2}, #{drwtNo3}, #{drwtNo4}, #{drwtNo5}, #{drwtNo6},
+            #{bnusNo}, #{win1Money}, #{win1Count}, #{win2Money}, #{win2Count}
+        )
+    </insert>
+	
+	
 </mapper>
