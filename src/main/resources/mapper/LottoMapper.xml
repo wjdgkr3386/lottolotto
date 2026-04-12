@@ -4,10 +4,49 @@
 
 <mapper namespace="com.example.demo.dao.LottoDAO">
 
+	<!-- DB에 저장되어있는 가장 최근 회차 번호 -->
 	<select id="getMaxNumber" resultType="int">
 		select max(drw_no) from lotto
 	</select>
 	
+	<!-- 각 번호마다 선택된 횟수 -->
+	<select id="numGroup" resultType="HashMap">
+		SELECT num, COUNT(*) AS count
+		FROM (
+		    SELECT drwt_no1 AS num FROM lotto
+		    UNION ALL SELECT drwt_no2 FROM lotto
+		    UNION ALL SELECT drwt_no3 FROM lotto
+		    UNION ALL SELECT drwt_no4 FROM lotto
+		    UNION ALL SELECT drwt_no5 FROM lotto
+		    UNION ALL SELECT drwt_no6 FROM lotto
+		) AS combined_numbers
+		GROUP BY num
+		ORDER BY num ASC
+	</select>
+	
+	<!-- 쿨번호, 핫번호 -->
+	<select id="getCoolHot" resultType="HashMap">
+		SELECT 
+	    (SELECT drwt_no FROM (
+	        SELECT drwt_no1 AS drwt_no FROM lotto UNION ALL
+	        SELECT drwt_no2 FROM lotto UNION ALL
+	        SELECT drwt_no3 FROM lotto UNION ALL
+	        SELECT drwt_no4 FROM lotto UNION ALL
+	        SELECT drwt_no5 FROM lotto UNION ALL
+	        SELECT drwt_no6 FROM lotto
+	    ) u1 GROUP BY drwt_no ORDER BY COUNT(*) DESC LIMIT 1) AS max,
+	    
+	    (SELECT drwt_no FROM (
+	        SELECT drwt_no1 AS drwt_no FROM lotto UNION ALL
+	        SELECT drwt_no2 FROM lotto UNION ALL
+	        SELECT drwt_no3 FROM lotto UNION ALL
+	        SELECT drwt_no4 FROM lotto UNION ALL
+	        SELECT drwt_no5 FROM lotto UNION ALL
+	        SELECT drwt_no6 FROM lotto
+	    ) u2 GROUP BY drwt_no ORDER BY COUNT(*) ASC LIMIT 1) AS min;
+	</select>    
+	
+	<!-- 회차 정보 입력 -->
     <insert id="lottoInsert" parameterType="com.example.demo.model.Lotto">
         INSERT INTO lotto (
             drw_no, drwt_no1, drwt_no2, drwt_no3, drwt_no4, drwt_no5, drwt_no6,

@@ -26,6 +26,7 @@ public class LottoAPIService {
     @Autowired
     LottoDAO lottoDAO;
 
+    // DB 로또 최신화
     public void LottoInit() {
         ZoneId koreaZone = ZoneId.of("Asia/Seoul");
         LocalDateTime nowDateTime = LocalDateTime.now(koreaZone);
