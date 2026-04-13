@@ -1,0 +1,17 @@
+create database lottolotto;
+use lottolotto;
+
+CREATE TABLE lotto (
+    drw_no      INT          NOT NULL PRIMARY KEY,  -- 회차
+    drwt_no1    INT          NOT NULL,              -- 번호1
+    drwt_no2    INT          NOT NULL,              -- 번호2
+    drwt_no3    INT          NOT NULL,              -- 번호3
+    drwt_no4    INT          NOT NULL,              -- 번호4
+    drwt_no5    INT          NOT NULL,              -- 번호5
+    drwt_no6    INT          NOT NULL,              -- 번호6
+    bnus_no     INT          NOT NULL,              -- 보너스 번호
+    win_1_money BIGINT       NULL,                  -- 1등 당첨금
+    win_1_count INT          NULL,                  -- 1등 당첨자 수
+    win_2_money BIGINT       NULL,                  -- 2등 당첨금
+    win_2_count INT          NULL                   -- 2등 당첨자 수
+);

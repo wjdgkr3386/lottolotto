@@ -1,31 +1,29 @@
 package com.example.demo.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.example.demo.service.LottoAPIService;
+import com.example.demo.dto.InsertLottoDTO;
 
 @Controller
-@RequestMapping("/")
+@RequestMapping("/lotto")
 public class LottoController {
-
-	@Autowired
-	LottoAPIService lottoAPIService;
 	
-    @GetMapping({"/",""})
-    public String Lotto() {
-        System.out.println("LottoController - Lotto");
-        return "home";
+    @GetMapping("/list")
+    public String List() {
+        return "lotto/list";
     }
-
-    @GetMapping("/getLotto")
-    public String LottoInsert() {
-        System.out.println("LottoController - getLotto");
-
-        lottoAPIService.LottoInit();
-
-        return "redirect:/";
+    
+    @GetMapping("/insert")
+    public String Insert() {
+    	return "lotto/insert";
+    }
+    
+    @PostMapping("/insert")
+    public void Insert(InsertLottoDTO lotto) {
+    	System.out.println("[POST] LottoController - Insert");
+    	System.out.println(lotto);
     }
 }
