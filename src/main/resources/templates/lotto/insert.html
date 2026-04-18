@@ -71,7 +71,7 @@ input[type=number] {
 }
 
 /* 버튼 스타일 커스텀 */
-.btn-danger {
+.buttons button {
     border-radius: 8px;
     font-weight: bold;
     padding: 12px 0;
@@ -83,6 +83,9 @@ input[type=number] {
 
 <div class="container py-4" style="max-width: 700px;">
     <h3 class="mb-4">🎱 로또 당첨번호 입력</h3>
+	<button type="button" onclick="openUrl('https://www.dhlottery.co.kr/lt645/result')">
+		추첨결과 확인
+	</button>
 
     <!-- 결과 메시지 -->
     <div class="alert alert-success" th:if="${msg}" th:text="${msg}"></div>
@@ -132,8 +135,9 @@ input[type=number] {
         </div>
 
         <!-- 버튼 -->
-        <div class="text-center">
-            <button type="submit" class="btn btn-danger px-5">저장</button>
+        <div class="text-center buttons">
+			<button type="button" class="btn btn-primary px-5" onclick="location.href='/lotto/list'">목록</button>
+            <button type="button" class="btn btn-danger px-5" onclick="submitForm()">저장</button>
         </div>
 
     </form>
@@ -155,6 +159,29 @@ document.querySelectorAll(".money-input").forEach(function(input) {
         input.value = input.value.replace(/,/g, "").replace(/원/g, "").trim();
     });
 });
+
+function openUrl(url){
+	window.open(url, '_blank');
+}
+
+function submitForm() {
+    const form = document.getElementById("lottoForm");
+    const formData = new FormData(form);
+
+    fetch("/lotto/insert", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.text())
+    .then(result => {
+        if(result == 1){
+            alert("저장 성공");
+            location.href = "/lotto/list";
+        } else {
+            alert("저장 실패");
+        }
+    });
+}
 </script>
 
 </body>

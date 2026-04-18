@@ -46,6 +46,96 @@
 	    ) u2 GROUP BY drwt_no ORDER BY COUNT(*) ASC LIMIT 1) AS min;
 	</select>    
 	
+	<!-- 가장 오랫동안 안나온 번호 -->
+	<select id="latestNumber" resultType="int">
+		SELECT 
+		    num
+		FROM (
+		    SELECT 
+		        num,
+		        MAX(latest.max_drw_no) - MAX(drw_no) AS gap_now
+		    FROM (
+		        SELECT drw_no, drwt_no1 AS num FROM lotto
+		        UNION ALL
+		        SELECT drw_no, drwt_no2 FROM lotto
+		        UNION ALL
+		        SELECT drw_no, drwt_no3 FROM lotto
+		        UNION ALL
+		        SELECT drw_no, drwt_no4 FROM lotto
+		        UNION ALL
+		        SELECT drw_no, drwt_no5 FROM lotto
+		        UNION ALL
+		        SELECT drw_no, drwt_no6 FROM lotto
+		    ) t
+		    CROSS JOIN (SELECT MAX(drw_no) AS max_drw_no FROM lotto) latest
+		    GROUP BY num
+		) t2
+		ORDER BY gap_now DESC
+		LIMIT 1;
+	</select>
+	
+	<!-- 이제 나올 타이밍인 번호 6개 조회 -->
+	<select id="timeNumber">
+		SELECT num
+		FROM (
+		    SELECT 
+		        t3.num,
+		        ABS(t3.gap_now - t2.avg_gap) AS diff
+		    FROM
+		    (
+		        -- 평균 gap
+		        SELECT 
+		            num,
+		            AVG(gap) AS avg_gap
+		        FROM (
+		            SELECT 
+		                num,
+		                drw_no - LAG(drw_no) OVER (PARTITION BY num ORDER BY drw_no) AS gap
+		            FROM (
+		                SELECT drw_no, drwt_no1 AS num FROM lotto
+		                UNION ALL
+		                SELECT drw_no, drwt_no2 FROM lotto
+		                UNION ALL
+		                SELECT drw_no, drwt_no3 FROM lotto
+		                UNION ALL
+		                SELECT drw_no, drwt_no4 FROM lotto
+		                UNION ALL
+		                SELECT drw_no, drwt_no5 FROM lotto
+		                UNION ALL
+		                SELECT drw_no, drwt_no6 FROM lotto
+		            ) t
+		        ) t2
+		        WHERE gap IS NOT NULL
+		        GROUP BY num
+		    ) t2
+		    JOIN
+		    (
+		        -- 현재 gap
+		        SELECT 
+		            num,
+		            MAX(latest.max_drw_no) - MAX(drw_no) AS gap_now
+		        FROM (
+		            SELECT drw_no, drwt_no1 AS num FROM lotto
+		            UNION ALL
+		            SELECT drw_no, drwt_no2 FROM lotto
+		            UNION ALL
+		            SELECT drw_no, drwt_no3 FROM lotto
+		            UNION ALL
+		            SELECT drw_no, drwt_no4 FROM lotto
+		            UNION ALL
+		            SELECT drw_no, drwt_no5 FROM lotto
+		            UNION ALL
+		            SELECT drw_no, drwt_no6 FROM lotto
+		        ) t
+		        CROSS JOIN (SELECT MAX(drw_no) AS max_drw_no FROM lotto) latest
+		        GROUP BY num
+		    ) t3
+		    ON t2.num = t3.num
+		) t
+		ORDER BY diff ASC
+		LIMIT 6;
+	</select>
+	
 	<!-- 회차 정보 입력 -->
     <insert id="lottoInsert" parameterType="com.example.demo.model.Lotto">
         INSERT INTO lotto (
