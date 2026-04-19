@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.example.demo.dao.LottoDAO;
+import com.example.demo.dao.LottoDao;
 import com.example.demo.model.Lotto;
 import com.example.demo.service.LottoService;
 
@@ -19,38 +18,37 @@ import com.example.demo.service.LottoService;
 @RequestMapping("/lotto")
 public class LottoController {
 
-	@Autowired
-	LottoDAO lottoDAO;
-	@Autowired
-	LottoService lottoService;
-	
-	@GetMapping("/list")
-	public String List(Model model) {
-	    int lottoMaxNo = lottoDAO.getMaxNumber();
-	    List<Map<String, Object>> numGroup = lottoDAO.numGroup();
-	    Map<String, Object> coolHot = lottoDAO.getCoolHot();
-	    int latestNumber = lottoDAO.latestNumber();
-	    List<Integer> timeNumber = lottoDAO.timeNumber();
+    @Autowired LottoDao lottoDao;
+    @Autowired LottoService lottoService;
 
-	    model.addAttribute("lottoMaxNo", lottoMaxNo);
-	    model.addAttribute("numGroup", numGroup);
-	    model.addAttribute("coolHot", coolHot);
-	    model.addAttribute("latestNumber", latestNumber);
-	    model.addAttribute("timeNumber", timeNumber);
-
-	    return "lotto/list";
-	}
-    
-    @GetMapping("/insert")
-    public String Insert() {
-    	return "lotto/insert";
+    // 메인 통계 페이지
+    @GetMapping("/list")
+    public String list(Model model) {
+        model.addAttribute("lottoMaxNo",   lottoDao.getMaxNumber());
+        model.addAttribute("numGroup",     lottoDao.numGroup());
+        model.addAttribute("coolHot",      lottoDao.getCoolHot());
+        model.addAttribute("latestNumber", lottoDao.latestNumber());
+        model.addAttribute("timeNumber",   lottoDao.timeNumber());
+        return "lotto/list";
     }
-    
+
+    // 회차 입력 페이지
+    @GetMapping("/insert")
+    public String insertForm() {
+        return "lotto/insert";
+    }
+
+    // 회차 입력 처리
     @ResponseBody
     @PostMapping("/insert")
-    public int Insert(Lotto lotto) {
-    	System.out.println("[POST] LottoController - Insert");
-    	int result = lottoService.LottoInsert(lotto);
-    	return result;
+    public int insert(Lotto lotto) {
+        return lottoService.lottoInsert(lotto);
+    }
+
+    // 알고리즘 번호 추천 API
+    @ResponseBody
+    @GetMapping("/algorithm")
+    public Map<String, Object> algorithm() {
+        return lottoService.algorithmRecommend();
     }
 }

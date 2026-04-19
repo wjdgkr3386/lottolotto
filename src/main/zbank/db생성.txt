@@ -13,5 +13,6 @@ CREATE TABLE lotto (
     win_1_money BIGINT       NULL,                  -- 1등 당첨금
     win_1_count INT          NULL,                  -- 1등 당첨자 수
     win_2_money BIGINT       NULL,                  -- 2등 당첨금
-    win_2_count INT          NULL                   -- 2등 당첨자 수
+    win_2_count INT          NULL,                  -- 2등 당첨자 수
+    attempt_count	BIGINT	 NULL					-- 랜덤 일치까지 걸린 총 시도 횟수
 );

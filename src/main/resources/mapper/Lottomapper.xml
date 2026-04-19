@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.demo.dao.LottoDao">
+
+    <!-- 최근 저장된 회차 -->
+    <select id="getMaxNumber" resultType="int">
+        SELECT MAX(drw_no) FROM lotto
+    </select>
+
+    <!-- 회차 정보 입력 -->
+    <insert id="lottoInsert" parameterType="com.example.demo.model.Lotto">
+        INSERT INTO lotto (
+            drw_no, drwt_no1, drwt_no2, drwt_no3, drwt_no4, drwt_no5, drwt_no6,
+            bnus_no, win_1_money, win_1_count, win_2_money, win_2_count
+        ) VALUES (
+            #{drwNo}, #{drwtNo1}, #{drwtNo2}, #{drwtNo3}, #{drwtNo4}, #{drwtNo5}, #{drwtNo6},
+            #{bnusNo}, #{win1Money}, #{win1Count}, #{win2Money}, #{win2Count}
+        )
+    </insert>
+
+    <!-- 번호별 출현 횟수 -->
+    <select id="numGroup" resultType="HashMap">
+        SELECT num, COUNT(*) AS count
+        FROM (
+            SELECT drwt_no1 AS num FROM lotto
+            UNION ALL SELECT drwt_no2 FROM lotto
+            UNION ALL SELECT drwt_no3 FROM lotto
+            UNION ALL SELECT drwt_no4 FROM lotto
+            UNION ALL SELECT drwt_no5 FROM lotto
+            UNION ALL SELECT drwt_no6 FROM lotto
+        ) t
+        GROUP BY num
+        ORDER BY num ASC
+    </select>
+
+    <!-- 핫번호 / 쿨번호 -->
+    <select id="getCoolHot" resultType="HashMap">
+        SELECT
+            (SELECT drwt_no FROM (
+                SELECT drwt_no1 AS drwt_no FROM lotto UNION ALL
+                SELECT drwt_no2 FROM lotto UNION ALL
+                SELECT drwt_no3 FROM lotto UNION ALL
+                SELECT drwt_no4 FROM lotto UNION ALL
+                SELECT drwt_no5 FROM lotto UNION ALL
+                SELECT drwt_no6 FROM lotto
+            ) u1 GROUP BY drwt_no ORDER BY COUNT(*) DESC LIMIT 1) AS max,
+            (SELECT drwt_no FROM (
+                SELECT drwt_no1 AS drwt_no FROM lotto UNION ALL
+                SELECT drwt_no2 FROM lotto UNION ALL
+                SELECT drwt_no3 FROM lotto UNION ALL
+                SELECT drwt_no4 FROM lotto UNION ALL
+                SELECT drwt_no5 FROM lotto UNION ALL
+                SELECT drwt_no6 FROM lotto
+            ) u2 GROUP BY drwt_no ORDER BY COUNT(*) ASC LIMIT 1) AS min
+    </select>
+
+    <!-- 최장 미출현 번호 -->
+    <select id="latestNumber" resultType="int">
+        SELECT num
+        FROM (
+            SELECT
+                num,
+                MAX(latest.max_drw_no) - MAX(drw_no) AS gap_now
+            FROM (
+                SELECT drw_no, drwt_no1 AS num FROM lotto UNION ALL
+                SELECT drw_no, drwt_no2 FROM lotto UNION ALL
+                SELECT drw_no, drwt_no3 FROM lotto UNION ALL
+                SELECT drw_no, drwt_no4 FROM lotto UNION ALL
+                SELECT drw_no, drwt_no5 FROM lotto UNION ALL
+                SELECT drw_no, drwt_no6 FROM lotto
+            ) t
+            CROSS JOIN (SELECT MAX(drw_no) AS max_drw_no FROM lotto) latest
+            GROUP BY num
+        ) t2
+        ORDER BY gap_now DESC
+        LIMIT 1
+    </select>
+
+    <!-- 타이밍 번호 6개 (현재 gap이 평균 간격에 가장 근접한 번호) -->
+    <select id="timeNumber" resultType="int">
+        SELECT num
+        FROM (
+            SELECT
+                t3.num,
+                ABS(t3.gap_now - t2.avg_gap) AS diff
+            FROM (
+                SELECT num, AVG(gap) AS avg_gap
+                FROM (
+                    SELECT num,
+                           drw_no - LAG(drw_no) OVER (PARTITION BY num ORDER BY drw_no) AS gap
+                    FROM (
+                        SELECT drw_no, drwt_no1 AS num FROM lotto UNION ALL
+                        SELECT drw_no, drwt_no2 FROM lotto UNION ALL
+                        SELECT drw_no, drwt_no3 FROM lotto UNION ALL
+                        SELECT drw_no, drwt_no4 FROM lotto UNION ALL
+                        SELECT drw_no, drwt_no5 FROM lotto UNION ALL
+                        SELECT drw_no, drwt_no6 FROM lotto
+                    ) t
+                ) t2
+                WHERE gap IS NOT NULL
+                GROUP BY num
+            ) t2
+            JOIN (
+                SELECT num, MAX(latest.max_drw_no) - MAX(drw_no) AS gap_now
+                FROM (
+                    SELECT drw_no, drwt_no1 AS num FROM lotto UNION ALL
+                    SELECT drw_no, drwt_no2 FROM lotto UNION ALL
+                    SELECT drw_no, drwt_no3 FROM lotto UNION ALL
+                    SELECT drw_no, drwt_no4 FROM lotto UNION ALL
+                    SELECT drw_no, drwt_no5 FROM lotto UNION ALL
+                    SELECT drw_no, drwt_no6 FROM lotto
+                ) t
+                CROSS JOIN (SELECT MAX(drw_no) AS max_drw_no FROM lotto) latest
+                GROUP BY num
+            ) t3 ON t2.num = t3.num
+        ) t
+        ORDER BY diff ASC
+        LIMIT 6
+    </select>
+
+    <!-- 직전 회차 번호 -->
+    <select id="getLatestLotto" resultType="HashMap">
+        SELECT drwt_no1, drwt_no2, drwt_no3, drwt_no4, drwt_no5, drwt_no6
+        FROM lotto
+        WHERE drw_no = (SELECT MAX(drw_no) FROM lotto)
+    </select>
+
+    <!-- 번호별 현재 gap_now -->
+    <select id="getGapNowList" resultType="HashMap">
+        SELECT
+            num,
+            MAX(latest.max_drw_no) - MAX(drw_no) AS gap_now
+        FROM (
+            SELECT drw_no, drwt_no1 AS num FROM lotto UNION ALL
+            SELECT drw_no, drwt_no2 FROM lotto UNION ALL
+            SELECT drw_no, drwt_no3 FROM lotto UNION ALL
+            SELECT drw_no, drwt_no4 FROM lotto UNION ALL
+            SELECT drw_no, drwt_no5 FROM lotto UNION ALL
+            SELECT drw_no, drwt_no6 FROM lotto
+        ) t
+        CROSS JOIN (SELECT MAX(drw_no) AS max_drw_no FROM lotto) latest
+        GROUP BY num
+        ORDER BY num ASC
+    </select>
+
+    <!-- 번호별 전체 출현 회차 목록 (avg_gap, std_gap, consec_ratio 동적 계산용) -->
+    <select id="getAllAppearances" resultType="HashMap">
+        SELECT num, drw_no
+        FROM (
+            SELECT drwt_no1 AS num, drw_no FROM lotto UNION ALL
+            SELECT drwt_no2, drw_no FROM lotto UNION ALL
+            SELECT drwt_no3, drw_no FROM lotto UNION ALL
+            SELECT drwt_no4, drw_no FROM lotto UNION ALL
+            SELECT drwt_no5, drw_no FROM lotto UNION ALL
+            SELECT drwt_no6, drw_no FROM lotto
+        ) t
+        ORDER BY num ASC, drw_no ASC
+    </select>
+
+</mapper>
